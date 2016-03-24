@@ -13,16 +13,16 @@ For example:
 
     #....
 
-    target_link_libraries(... ASN1::encoderLib)
+    target_link_libraries(project_exe ... ASN1::encoderLib)
 ```
 
 Notice how the resulting library name receives the `ANS1::` prefix applied to the name given in the first argument. To include the generated headers in your C/C++ code, use a line like:
 ```
-#include <asn1/NumericString.h>
+#include <ASN1/NumericString.h>
 ```
 
 ## Syntax
-Use [`file(DOWNLOAD ...)`](https://cmake.org/cmake/help/latest/command/file.html#download) in your `CMakeLists.txt` to download the script if it does not exist.
+To use the script in your project, create a git [submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) or [subtree](https://github.com/git/git/blob/master/contrib/subtree/git-subtree.txt) in your repository, or include a [`file(DOWNLOAD ...)`](https://cmake.org/cmake/help/latest/command/file.html#download) command in your `CMakeLists.txt` to download the script when it does not exist.
 
 The full function syntax is as follows:
 ```
@@ -40,9 +40,9 @@ asn1_add_module_library(
 	MODULES ModuleFile.asn1 ModuleFile.asn1 ...)
 ```
 
-The `GENERATED_SOURCE_DIRECTORY` keyword specifies the base directory for the location of the generated C source files. The default value is `${PROJECT_BINARY_DIR}/gensrc`. The external `asn1c` command will be run in this directory or a subdirectory named after the include prefix.
+The `GENERATED_SOURCE_DIRECTORY` keyword specifies the base directory for the location of the generated C source files. The default value is `${CMAKE_CURRENT_BINARY_DIR}/gensrc`. The external `asn1c` command will be run in this directory or a subdirectory named after the include prefix.
 
-The `INCLUDE_PREFIX_DIRECTORY` keyword gives a subdirectory within the `GENERATED_SOURCE_DIRECTORY`, where the C source files will be found.  The intent is that this subdirectory will have to be used as part of the file name in the C/C++ `#include` directives that reference generated files. The default value for the prefix directory is `asn1`. You can use the value `-` if you want no prefix directory for the resulting include files. In this case the generated files will be found directly under the `GENERATED_SOURCE_DIRECTORY`.
+The `INCLUDE_PREFIX_DIRECTORY` keyword gives a subdirectory within the `GENERATED_SOURCE_DIRECTORY`, where the C source files will be found.  The intent is that this subdirectory will have to be used as part of the file name in the C/C++ `#include` directives that reference generated files. The default value for the prefix directory is `ASN1`. You can use the value `-` if you want no prefix directory for the resulting include files. In this case the generated files will be found directly under the `GENERATED_SOURCE_DIRECTORY`.
 
 The `ASN1C_OPTIONS` keyword gives a list of additional options to be used on the command line to external `asn1c` tool. See the online [asn1c](http://lionet.info/asn1c) documentation for these options. You should not give any options that suppress the normal source generation of the compiler or that change the output directory. To specify the path to `asn1c` executable you can define the CMake variable `ASN1C_EXE`.
 
@@ -56,7 +56,7 @@ The `GLOBAL_TARGET` keyword will make the given targetName visible to CMake scri
 
 The `MODULES` keyword is only needed after the other list keywords (`ASN1C_OPTIONS`, `COMPILE_FLAGS`...) to terminate that list and start a list of modules to be compiled for C source generation.
 
-Other arguments, that is `ModuleFile.asn1` give ASN.1 Module Definition files as defined in [X.680](https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-X.680-201508-I!!PDF-E&type=items). File names are relative to [`PROJECT_SOURCE_DIR`](https://cmake.org/cmake/help/latest/variable/PROJECT_SOURCE_DIR.html), to resemble other source files.
+Other arguments, that is `ModuleFile.asn1` give ASN.1 Module Definition files as defined in [X.680](https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-X.680-201508-I!!PDF-E&type=items). File names are relative to [`CMAKE_CURRENT_SOURCE_DIR`](https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_SOURCE_DIR.html) like other source files.
 
 ## Module library usage
 The function above introduces a new `INTERFACE` library target to your CMake project, with the name given in the first function argument, but with the `ASN1::` prefix. So the resulting target name has the form `ASN1::targetName`. This library can then be added to the link libraries of other project targets, using [`target_link_libraries()`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html). The dependent target will then automatically include the generated source files, that will be compiled with the given compiler options, if any.

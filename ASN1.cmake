@@ -9,7 +9,7 @@ set(ASN1C_MODULE_LIST_FILE ${CMAKE_CURRENT_LIST_FILE})
 # Sample usage:
 #
 #   asn1_modules_library(x509
-#           GENERATED_SOURCE_DIRECTORY "${PROJECT_BINARY_DIR}/gensrc"
+#           GENERATED_SOURCE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/gensrc"
 #           INCLUDE_PREFIX_DIRECTORY "asn1"
 #           ASN1C_OPTIONS -fwide-types -fincludes-quoted -print-lines
 #           ASN1_DEBUG_OUTPUT false
@@ -17,7 +17,7 @@ set(ASN1C_MODULE_LIST_FILE ${CMAKE_CURRENT_LIST_FILE})
 #           GLOBAL_TARGET
 #           MODULES "ModuleDefinitionFile.asn1" "ModuleDefinitionFile.asn1")
 #
-# target_link_libraries(... x509)
+# target_link_libraries(... ASN1::x509)
 
 function(asn1_add_module_library ASN1_LIBRARY_TARGET)
 
@@ -86,8 +86,10 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
                         message(WARNING "A known compiler is expected in order to disable warnings, ${ASN1_ARG} given.")
                     endif()
                 else()
+                    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ASN1_ARG}")
+
                     if(NOT IS_ABSOLUTE ${ASN1_ARG})
-                        set(ASN1_ARG "${PROJECT_SOURCE_DIR}/${ASN1_ARG}")
+                        set(ASN1_ARG "${CMAKE_CURRENT_SOURCE_DIR}/${ASN1_ARG}")
                     endif()
     
                     list(APPEND ASN1_MODULES ${ASN1_ARG})
@@ -98,15 +100,15 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
 
     # apply defaults and verify the command options
     if(NOT ASN1_BASE_OUTPUT_DIR)
-        set(ASN1_BASE_OUTPUT_DIR "${PROJECT_BINARY_DIR}/gensrc")
+        set(ASN1_BASE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/gensrc")
     endif()
 
     if (NOT IS_ABSOLUTE ${ASN1_BASE_OUTPUT_DIR})
-        set(ASN1_BASE_OUTPUT_DIR "${PROJECT_BINARY_DIR}/${ASN1_BASE_OUTPUT_DIR}")
+        set(ASN1_BASE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${ASN1_BASE_OUTPUT_DIR}")
     endif()
 
     if (ASN1_INCLUDE_PREFIX STREQUAL "-NOTFOUND")
-        set(ASN1_INCLUDE_PREFIX "asn1")
+        set(ASN1_INCLUDE_PREFIX "ASN1")
     endif()
 
     if (ASN1_INCLUDE_PREFIX STREQUAL "-")
@@ -142,12 +144,14 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
     endif()
 
     file(SHA3_384 ${ASN1C_MODULE_LIST_FILE} ASN1_EXPECTED_BUILD_ID)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${ASN1C_MODULE_LIST_FILE})
 
     # check `asn1c` compiler executable
     find_program(ASN1C_EXE asn1c)
 
     if (NOT ASN1C_EXE)
-        message(FATAL_ERROR "ASN.1 compiler `asn1c` (see http://lionet.info/asn1c/) is needed to compile module definitions for target ${ASN1_LIBRARY_TARGET}.")
+        message(FATAL_ERROR "ASN.1 compiler `asn1c` (see http://lionet.info/asn1c/) is needed to compile module definitions for target ${ASN1_LIBRARY_TARGET}.\n"
+                    "You can set CMake variable ASN1C_EXE to the `asn1c` compiler path.")
     endif()
 
     if("${ASN1C_EXE}" IS_NEWER_THAN "${ASN1_BUILD_TAG_FILE}")
@@ -156,6 +160,7 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
 
     file(SHA3_384 ${ASN1C_EXE} ASN1C_EXE_HASH)
     list(APPEND ASN1_EXPECTED_BUILD_ID ${ASN1C_EXE_HASH})
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${ASN1C_EXE})
 
     # check build options together with the hashes
     list(APPEND ASN1_EXPECTED_BUILD_ID ${ASN1_CMD_OPTIONS})
@@ -203,12 +208,6 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
 
         file(WRITE ${ASN1_BUILD_TAG_FILE} "${ASN1_EXPECTED_BUILD_ID}")
     endif()
-
-    # treat module files as configure files, so they trigger cmake generation after content changes
-    foreach(ASN1_MODULE ${ASN1_MODULES})
-        get_filename_component(ASN1_MODULE_BASENAME ${ASN1_MODULE} NAME)
-        configure_file(${ASN1_MODULE} "${ASN1_BASE_OUTPUT_DIR}/${ASN1_MODULE_BASENAME}.build.tag" COPYONLY)
-    endforeach()
 
     # list generated files
     file(GLOB_RECURSE ASN1_GENERATED_SOURCES
