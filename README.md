@@ -77,7 +77,10 @@ The `ASN1C_OPTIONS` keyword gives a list of additional options to be used on the
 
 The `ASN1_DEBUG_OUTPUT` keyword with the value `true` will add a C preprocessor macro to the compilation options for your target. The macro is used by the generated C sources to output debug information when parsing encoded ASN.1 input. Use this options during debugging to see why the generated code can not parse your encoded input. The effect is to add `-DASN1_EMIT_DEBUG=1` to CMake targets that link with `ASN1::targetName`.
 
-As the function produces generated code, you may want to disable warnings for the resulting sources. Unfortunately the warning options are compiler-specific, and CMake currently has no single option to disable warnings for any supported compiler.  So you can use the `DISABLE_WARNINGS` keyword with a list of compiler ID arguments, for one or more of the well known compilers. They currently are `GNU` and `MSVC` only. Or you can use a `-` to disable warnings on any of these known compilers.
+As the function produces generated code, you may want to disable warnings for the resulting sources. Unfortunately the warning options are compiler-specific, and CMake currently has no single option to disable warnings for all supported compilers.  So you can use the `DISABLE_WARNINGS` keyword with a list of compiler ID arguments, for one or more of the well known compilers. They currently are `GNU` and `MSVC` only. Or you can use a dash `-` to disable warnings on any of these known compilers. Using this option is not recommended, instead disable specific warnings that are bothering you. For the appropriate warnings for MSVC use `COMPILE_OPTIONS MSVC "/wd4244" "/wd4267" "/wd4996"`, which will disable:
+- C4244: conversion' conversion from 'type1' to 'type2', possible loss of data
+- C4267: 'var' : conversion from 'size_t' to 'type', possible loss of data
+- C4996: explicit `deprecated` declaration, for example: "This function or variable may be unsafe. Consider using _safe_version_ instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details."
 
 You can pass any list of options to the compiler with the `COMPILE_OPTIONS` keyword to the function. Specify the `<c_compiler_id>` immediately after `COMPILE_OPTIONS` and before the options list. Options will only be applied when the current C compiler (see ][`CMAKE_C_COMPILER_ID`](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html)). The flags listed will be used to compile the generated source files. The `DISABLE_WARNINGS` option above is a pre-defined set of `COMPILE_FLAGS`.
 
@@ -88,14 +91,12 @@ The `MODULES` keyword is only needed after the other list keywords (`ASN1C_OPTIO
 Other arguments, that is `<ModuleFile.asn1>` give ASN.1 Module Definition files as defined in [X.680](https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-X.680-201508-I!!PDF-E&type=items). File names are relative to [`CMAKE_CURRENT_SOURCE_DIR`](https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_SOURCE_DIR.html) like other source files.
 
 
-A number of additional options are provided mostly for compatibility with Windows systems, where the old `asn1c` version provided with the Windows installer would not work out-of-the-box. These allow you to:
+A number of additional options are available mostly for compatibility with the Microsoft Windows systems, where the old `asn1c` version provided with the Windows installer would not work out-of-the-box. These allow you to:
 - pass additional `#define's` for compiling generated sources
 - apply .cmake scripts to patch the generated source files
 - access `asn1c` skeleton files directory
 
-Also for compatibility the following options are used automatically:
-- `-fskeletons-copy` option is given to `asn1c` command when it is available (when it is found in the output from the `-help` option)
-- `Ws2_32.dll` library is added to the list of dependency libraries when `asn1c` version is below 0.9.29 and the compiler ID is 'MSVC'. In this cases the library is needed to provide the implementation for the POSIX [`ntohl()`](http://pubs.opengroup.org/onlinepubs/9699919799/functions/ntohl.html) function, that may be used by the generated C sources (in `constr_SET.c`).
+ See [Windows compatibility][(win_compat.md) for the available options.
 
 The `COMPILE_DEFINITIONS` keyword is used to add C compile definitions for compiling the generated sources.
 
@@ -112,31 +113,6 @@ Patching generated sources with these options was found necessary to support the
 Use `CONFIGURE_DEPENDS` keyword to pass additional files as dependencies for the generated output. For example a patch script above could could invoke an external script file with user-defined actions for patching, and the external script should now be a dependency for the resulting sources.
 
 The `COPY_SKELETON_FILES` keyword takes a list of `asn1c` skeleton source files that need to be included with the generated ASN.1 modules library. This is used if previous versions of the `asn1c`` do not copy the needed skeleton files automatically, resulting in missing header files and missing symbols related to the ASN.1 data types.
-
-#### Included patch scripts (.cmake includes files)
-
-These .cmake scripts are made available together with ASN1C.cmake module and can be used as arguments to `APPLY_DIRECTORY_PATCH_SCRIPT` or `APPLY_SOURCE_PATCH_SCRIPT` as appropriate.
-
-All of them will be needed on Windows with Visual Studio and the default version of `asn1c` from the installer (that is 0.9.21, if you do not compile `asn1c` from sources with MinGW/cygwin).
-
-- Asn1c_Patch_SkeletonFiles.cmake
-    * Used internally by ASN1C.cmake to copy all skeleton files given to the `COPY_SKELETON_FILE` keyword. This copy is an example of a directory patch script applied to the working directory (included) after `asn1c` has generated the C sources.
-- Asn1c_Patch_DuplicateHeaderTimeH.cmake
-    * Fixes for generated "Time.h" file, which on case-insensitive file systems is the same as the C / POSIX runtime header `<time.h>`. The script will rename the file to "ASN1_Time.h", and update all the `#include ` lines in the other sources appropriately. Note that for Linux the file system is tipically case-sensitive so this patch script need not be applied.
-- Asn1c_Patch_DuplicateIntTypesTypedef.cmake
-    * Fixes typedefs in the generated sources (by previous compiler version), that duplicate standard C int types int8_t, uint8_t, int16_t, ... for the `<stdint.h>` header. The script will remove the typedefs and add an `#include ` line for the standard library header instead.
-- Asn1c_Patch_WarningPragma.cmake
-    * Fixes C preprocessor `#warning "output message..."` lines, and replaces them with lines of the form `#pragma message("oputput message...")`. This is becase Visual Studio on Windows does not support the first form.
-- Asn1c_Patch_GMTOffsetMacro.cmake
-    * Fixes macro `GMTOFF(tm)` in `GeneralizedTime.c` source (if present), as taking the GMT offset of a calendar date in `struct tm` is not yet implemented in Visual C++. Instead this offset is implemented as the difference between `mktime(&tm)` and `gmtime(&tm)`, adjusted for any changes in daylight saving time introduced on the given `tm` argument by the call to `gmtime()`.
-- Asn1c_Patch_GeneralizedTimeIncludes.cmake
-    * Fixes missing `#include <stdlib.h>` in GeneralizedTime.c for `getenv()` function. Replaces calls to `setenv()` and `unsetenv()` with inline `do { } while()` blocks that implment the same calls using `putenv()` instead. This is because `setenv()` and `unsetenv()` are not implemented in Visual C++.
-- Asn1c_Patch_EqualityToAssignSetConstr.cmake
-    * Fixes an assignament in `constr_SET_Of.c` mistakenly written using `==` instead of `=`.
-- Asn1c_Patch_AttributeUnused.cmake
-    * Removes occurrences of `__attribute__ ((unused))` in the generated sources, as the attribute is not supported in Visual C++.
-
-Note the resulting GeneralizedTime.c file (if you need it) still has issues on Windows, even after patching, and you will not be able to validate ASN.1 constraints on this data type. Using a newer version then 0.9.21, compiled from sources for example, is recommended.
 
 ## Usage for the resulting ASN.1 module library
 The function above introduces a new `INTERFACE` library target to your CMake project, with the name given in the first function argument, but with the `ASN1::` prefix. So the resulting target name has the form `ASN1::targetName`. This library can then be added to the link libraries of other project targets, using [`target_link_libraries()`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html). The dependent target will then automatically include the generated source files, that will be compiled with the given compiler options, if any.

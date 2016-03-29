@@ -351,7 +351,7 @@ function(asn1_add_module_library ASN1_LIBRARY_TARGET)
     target_sources(${ASN1_LIBRARY_TARGET} INTERFACE ${ASN1_MODULES} ${ASN1_GENERATED_SOURCES})
 
     # add Ws2_32 library in compatibility
-    if (ASN1C_VERSION VERSION_LESS "0.9.29" AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    if (ASN1C_VERSION VERSION_LESS "0.9.29" AND WIN32)
         target_link_libraries(${ASN1_LIBRARY_TARGET} INTERFACE "Ws2_32")
     endif()
 
