@@ -82,7 +82,7 @@ As the function produces generated code, you may want to disable warnings for th
 - C4267: 'var' : conversion from 'size_t' to 'type', possible loss of data
 - C4996: explicit `deprecated` declaration, for example: "This function or variable may be unsafe. Consider using _safe_version_ instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details."
 
-You can pass any list of options to the compiler with the `COMPILE_OPTIONS` keyword to the function. Specify the `<c_compiler_id>` immediately after `COMPILE_OPTIONS` and before the options list. Options will only be applied when the current C compiler (see ][`CMAKE_C_COMPILER_ID`](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html)). The flags listed will be used to compile the generated source files. The `DISABLE_WARNINGS` option above is a pre-defined set of `COMPILE_FLAGS`.
+You can pass any list of options to the compiler with the `COMPILE_OPTIONS` keyword. Specify the `<c_compiler_id>` immediately after `COMPILE_OPTIONS` and before the options list. Options will only be applied when [`CMAKE_C_COMPILER_ID`](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html) matches `<c_compiler_id>`. The flags listed will be used to compile the generated source files. The `DISABLE_WARNINGS` option above is a pre-defined set of `COMPILE_FLAGS`.
 
 The `GLOBAL_TARGET` keyword will make the given targetName visible to CMake scripts outside the current source directory. By default the new target `ASN1::targetName` is only visible in or below the current directory, see the CMake documentation for [interface libraries](https://cmake.org/cmake/help/latest/command/add_library.html#id6).
 
@@ -96,7 +96,9 @@ A number of additional options are available mostly for compatibility with the M
 - apply .cmake scripts to patch the generated source files
 - access `asn1c` skeleton files directory
 
- See [Windows compatibility][(win_compat.md) for the available options.
+See:
+    [Windows compatibility](https://github.com/terminatorul/asn1c-cmake-module/blob/master/win_compat.md)
+for the available options.
 
 The `COMPILE_DEFINITIONS` keyword is used to add C compile definitions for compiling the generated sources.
 

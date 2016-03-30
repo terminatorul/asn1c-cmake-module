@@ -8,18 +8,23 @@ For compatibility the following options are applied automatically:
 
 ## Available patch scripts (.cmake includes files)
 
-The following .cmake patch scripts are made available together with ASN1C.cmake module They are not applied automatically (TODO: add checks for auto-apply), but you should probably just include them all as arguments to the apropriate keyword (`APPLY_DIRECTORY_PATCH_SCRIPT` or `APPLY_SOURCE_PATCH_SCRIPT`) in your call to `asn1_add_module_library()`. All of them were needed for the use case of ASN.1 modules for X.509 certificates (DER encoding).
+The following .cmake patch scripts are made available with `ASN1.cmake` module. They are not applied automatically (TODO: add checks for auto-apply), but you should probably include them all as arguments to the apropriate keyword (`APPLY_DIRECTORY_PATCH_SCRIPT` or `APPLY_SOURCE_PATCH_SCRIPT`) when using `asn1_add_module_library()`.
 
-All of them were needed on Windows with Visual Studio and the default version of `asn1c` from the installer (that is 0.9.21, if you do not compile `asn1c` from sources with MinGW/cygwin), and for the use case of procesing ASN.1 modules for X.509 certificates (DER encoding).
+All of them were needed in the case of:
+- Windows with Visual Studio
+- the default version of `asn1c` provided by the Windows installer (that is 0.9.21, if you do not compile `asn1c` from sources with MinGW/cygwin)
+- for the use case of procesing ASN.1 modules for X.509 certificates (DER encoding).
 
 It is possible you will need other patches for your modules or for other compilers.
 
+The included patch scripts are:
+
 - Asn1c_Patch_SkeletonFiles.cmake (directory, internal)
-    * Used internally by ASN1C.cmake to copy all skeleton files given to the `COPY_SKELETON_FILE` keyword. This copy is an example of a directory patch script applied to the working directory (included) after `asn1c` has generated the C sources.
+    * Used internally by ASN1C.cmake to implement the `COPY_SKELETON_FILE` keyword. It is an example of a directory patch script applied to the working directory after `asn1c` has generated the C sources.
 - Asn1c_Patch_DuplicateHeaderTimeH.cmake (directory, source)
-    * Fixes for generated "Time.h" file, which on case-insensitive file systems is the same as the C / POSIX runtime header `<time.h>`. The script will rename the file to "ASN1_Time.h", and update all the `#include ` lines in the other sources appropriately. Note that for Linux the file system is tipically case-sensitive so this patch script need not be applied.
+    * Fixes for generated "Time.h" file, which on case-insensitive file systems has the name of the standard C / POSIX runtime header `<time.h>`. The script will rename the generated file to "ASN1_Time.h", and update all the `#include ` lines in the other sources appropriately. Note that for Linux the file system is tipically case-sensitive so the patch script need not be applied.
 - Asn1c_Patch_DuplicateIntTypesTypedef.cmake (source)
-    * Fixes typedefs in the generated sources (by previous compiler version), that duplicate standard C int types int8_t, uint8_t, int16_t, ... for the `<stdint.h>` header. The script will remove the typedefs and add an `#include ` line for the standard library header instead.
+    * Fixes typedef declarations that duplicate standard C int types int8_t, uint8_t, int16_t, ... declared in `<stdint.h>`. The script will remove the typedefs and add an `#include ` line for the standard library header instead.
 - Asn1c_Patch_WarningPragma.cmake (source)
     * Fixes C preprocessor `#warning "output message..."` lines, and replaces them with lines of the form `#pragma message("oputput message...")`. This is becase Visual Studio on Windows does not support the first form.
 - Asn1c_Patch_GMTOffsetMacro.cmake (source)
