@@ -10,10 +10,10 @@ For compatibility the following options are applied automatically:
 
 The following .cmake patch scripts are made available with `ASN1.cmake` module. They are not applied automatically (TODO: add checks for auto-apply), but you should probably include them all as arguments to the apropriate keyword (`APPLY_DIRECTORY_PATCH_SCRIPT` or `APPLY_SOURCE_PATCH_SCRIPT`) when using `asn1_add_module_library()`.
 
-All of them were needed in the case of:
+All of them were needed in the case of using:
 - Windows with Visual Studio
 - the default version of `asn1c` provided by the Windows installer (that is 0.9.21, if you do not compile `asn1c` from sources with MinGW/cygwin)
-- for the use case of procesing ASN.1 modules for X.509 certificates (DER encoding).
+- the use case of procesing ASN.1 modules for X.509 certificates (DER encoding).
 
 It is possible you will need other patches for your modules or for other compilers.
 
@@ -38,4 +38,4 @@ The included patch scripts are:
 - TODO: Asn1c_Patch_ExtendGeneralizedTime.cmake (directory)
     * Add equivalents for the standard library date/time functions for working with year ranges above year 3000. Used for ASN.1 GeneralizedTime type.
 
-Note the resulting GeneralizedTime.c file (if you generate it) is still limited by the C run-time library functions from Visual C++ used for date/time maninpulations declared in `<time.h>` system header. Microsoft C run-time library limits the year number for date/times to a maximum value of 3000 for x64 system (and 2038 as expected for x86 systems). So if your encoded data uses larger values, the generated code of the modules library will return an encoding error (TODO: Complete the .cmake patch script for support for extended ranges of years).
+Note the resulting GeneralizedTime.c file (if you generate it) is still limited by the C run-time library functions from Visual C++ used for date/time maninpulations declared in `<time.h>` system header. Microsoft C run-time library limits the year number for date/times to a maximum value of 3000 for x64 system (and 2038 as expected for x86 systems). So if your encoded data uses larger values, the generated code of the modules library will return an encoding error (TODO: Complete the .cmake patch script for supporting extended range of years).

@@ -59,13 +59,13 @@ Looks for asn1c compiler on the current system. After including the module file,
 * `ASN1C_OPTIONS` A list of command line options found in the compiler output with the `-help` option.
 * `ASN1C_SHARED_INCLUDE_DIR` Internal option used by `ASN1C.cmake` module. If found, it is the directory to the skeleton files for the compiler. Files from this directory are copied as needed by the compiler and placed next to the generated files to provide the support for standard ASN.1 data types.
 
-This module is included by ASN1C.cmake, so you do not have to explicitly [`include()`](https://cmake.org/cmake/help/latest/command/include.html) it if.
+This module is included by ASN1C.cmake, so you do not have to explicitly [`include()`](https://cmake.org/cmake/help/latest/command/include.html) it.
 
 ### ASN1C.cmake
 
 Provides only one function function, `asn1_add_module_library()`, with the above syntax.
 
-The first argument `<targetName>` is the name of a library target that will be added to your project, with the `ASN1::` prefix. You have to link with this library in order to include and use the generated source files in the main target.
+The first argument `<targetName>` is the name of a library target that will be added to your project, with the `ASN1::` prefix (so `targetName` will produce a target named `ASN1::targetName`). You have to link with this library in order to include and use the generated source files in the main target.
 
 The `<ModuleFile.asn1>` arguments are names of ASN.1 Module Definition files, see [X.680](https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-X.680-201508-I!!PDF-E&type=items). The same arguments can also be given later on the command if preceded by the `MODULE` keyword, see below.
 
